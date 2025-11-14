@@ -766,39 +766,27 @@ MonoBehaviour:
   predatorPrefab: {fileID: 4052995007735122387, guid: 5e27945c5ac0f1347860bca8c74b254a, type: 3}
   preys: []
   predators: []
-  seperationRadius: 7
-  alignmentRadius: 20
-  cohesionRadius: 20
+  seperationRadius: 6
+  alignmentRadius: 10
+  cohesionRadius: 10
   predatorDetectionRadius: 50
-  maxForce: 10
-  maxSpeed: 8
-  seperationWeight: 100
-  alignmentWeight: 1
-  cohesionWeight: 1
-  predatorAvoidanceWeight: 3
-  randomMovementWeight: 0.5
-  fatigueRecoveryRate: 0.04
-  fatigueIncreaseRate: 0.02
-  wanderRadius: 4
-  wanderDistance: 2
-  wanderJitter: 4
-  wanderWeight: 2
-  predatorMaxSpeed: 6
-  predatorMaxForce: 10
-  predatorFriction: 0.9
-  predatorSeperationRadius: 10
-  predatorAlignmentRadius: 10
-  predatorCohesionRadius: 10
-  predatorSeperationWeight: 100
-  predatorAlignmentWeight: 1
-  predatorCohesionWeight: 1
-  preyDetectionRadius: 70
-  chaseWeight: 5
-  eatDistance: 3.3
-  hitDistance: 4
-  eatingCooldown: 2
-  hitCooldown: 3
-  damagePerHit: 0.2
+  maxForce: 15
+  maxSpeed: 3
+  seperationWeight: 50
+  alignmentWeight: 50
+  cohesionWeight: 50
+  predatorAvoidanceWeight: 100
+  randomMovementWeight: 1
+  predatorMaxSpeed: 4
+  predatorMaxForce: 30
+  preyDetectionRadius: 50
+  predatorSeperationRadius: 1
+  predatorAllignmentRadius: 2
+  predatorCohesionRadius: 3
+  predatorSeperationWeight: 5
+  predatorAlignmentWeight: 3
+  predatorCohesionWeight: 2
+  chaseWeight: 100
 --- !u!4 &1975339579
 Transform:
   m_ObjectHideFlags: 0
