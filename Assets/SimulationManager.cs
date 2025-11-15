@@ -6,13 +6,16 @@ public class SimulationManager : MonoBehaviour
     public static SimulationManager Instance { get; private set;}
 
 
-    public GameObject preyPrefab;
-    public GameObject predatorPrefab;
+    [SerializeField] GameObject preyPrefab;
+    [SerializeField] GameObject predatorPrefab;
     public List<GameObject> preys = new List<GameObject>();
     public List<GameObject> predators = new List<GameObject>();
+    [SerializeField] int preyCount = 50;
+    [SerializeField] int predatorCount = 5;
+    public float updateInterval = 0.1f;
+    public float rotationSmoothSpeed = 5.0f;
 
-
-    [Header("Prey Settings")]
+    [Header("★★★ PREY SETTINGS ★★★")]
     public float seperationRadius = 2.0f;
     public float alignmentRadius = 3.0f;
     public float cohesionRadius = 4.0f;
@@ -53,6 +56,24 @@ public class SimulationManager : MonoBehaviour
     public float hitCooldown = 3.0f;
     public float damagePerHit = 0.2f;
 
+    [Header("★★★ ISLAND BOUNDARY SETTINGS ★★★")]
+    public bool enableBoundary = true;
+    public enum BoundaryShape { Circle, Box }
+    public BoundaryShape shape = BoundaryShape.Circle;
+
+    [Header("Circle Boundary")]
+    public float boundaryRadius = 100f;
+
+    [Header("Box Boundary")]
+    public Vector2 boundarySize = new Vector2(200, 200);
+
+    [Header("Avoidance Force")]
+    public float boundaryMargin = 15f;
+    public float boundaryAvoidanceWeight = 4.0f;
+    public float boundaryForceMultiplier = 50.0f;
+
+
+
 
 
     void Awake()
@@ -69,15 +90,15 @@ public class SimulationManager : MonoBehaviour
 
     void Start()
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < preyCount; i++)
         {
-            Vector3 preyPosition = new Vector3(Random.Range(-10f, 10f), 3.0f, Random.Range(-10f, 10f));
+            Vector3 preyPosition = new Vector3(Random.Range(-10f, 10f), 10.0f, Random.Range(-10f, 10f));
             GameObject prey = Instantiate(preyPrefab, preyPosition, Quaternion.identity);
             preys.Add(prey);
         }
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < predatorCount; i++)
         {
-            Vector3 predatorPosition = new Vector3(Random.Range(15f, 20f), 3.0f, Random.Range(15f, 20f));
+            Vector3 predatorPosition = new Vector3(Random.Range(15f, 20f), 10.0f, Random.Range(15f, 20f));
             GameObject predator = Instantiate(predatorPrefab, predatorPosition, Quaternion.identity);
             predators.Add(predator);
         }

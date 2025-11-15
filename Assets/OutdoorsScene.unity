@@ -766,6 +766,10 @@ MonoBehaviour:
   predatorPrefab: {fileID: 4052995007735122387, guid: 5e27945c5ac0f1347860bca8c74b254a, type: 3}
   preys: []
   predators: []
+  preyCount: 50
+  predatorCount: 5
+  updateInterval: 0.1
+  rotationSmoothSpeed: 5
   seperationRadius: 7
   alignmentRadius: 20
   cohesionRadius: 20
@@ -799,6 +803,13 @@ MonoBehaviour:
   eatingCooldown: 2
   hitCooldown: 3
   damagePerHit: 0.2
+  enableBoundary: 1
+  shape: 0
+  boundaryRadius: 300
+  boundarySize: {x: 200, y: 200}
+  boundaryMargin: 50
+  boundaryAvoidanceWeight: 3
+  boundaryForceMultiplier: 50
 --- !u!4 &1975339579
 Transform:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using UnityEngine;
+using static SimulationManager;
 
 public class Predator : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class Predator : MonoBehaviour
     private float eatingCooldownTimer;
     private float hitCooldownTimer;
     public bool eating = false;
+    private float time = 0.0f;
     void Start()
     {
         simManager = SimulationManager.Instance;
@@ -31,6 +33,7 @@ public class Predator : MonoBehaviour
 
     void Update()
     {
+        time += Time.deltaTime;
         if (eatingCooldownTimer > 0)
         {
             eatingCooldownTimer -= Time.deltaTime;
@@ -39,6 +42,11 @@ public class Predator : MonoBehaviour
             return;
         }
 
+        if (time >= simManager.updateInterval)
+        {
+            time = 0.0f;
+            CalculateForces();
+        }
         CalculateForces();
         ApplyMovement();
         UpdateState();
@@ -49,6 +57,18 @@ public class Predator : MonoBehaviour
     {
         acceleration = Vector3.zero;
         isChasing = false;
+
+        Vector3 boundaryForce = Vector3.zero;
+        if (simManager.enableBoundary)
+        {
+            boundaryForce = CalculateBoundaryForce();
+        }
+
+        if (boundaryForce.sqrMagnitude > 0)
+        {
+            acceleration += boundaryForce * simManager.boundaryAvoidanceWeight;
+        }
+
         Vector3 chaseForce = Vector3.zero;
         if (hunger > 0.1f)
         {
@@ -85,7 +105,12 @@ public class Predator : MonoBehaviour
 
         if (velocity.sqrMagnitude > 0.001f)
         {
-            transform.rotation = Quaternion.LookRotation(new Vector3(velocity.x, 0.0f, velocity.z).normalized);
+            Vector3 flatVel = new Vector3(velocity.x, 0.0f, velocity.z);
+            if (flatVel.sqrMagnitude > 0.0001f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(flatVel.normalized);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, simManager.rotationSmoothSpeed * Time.deltaTime);
+            }
         }
     }
 
@@ -256,10 +281,65 @@ public class Predator : MonoBehaviour
         Vector3 steer = desiredDirection.normalized * simManager.predatorMaxSpeed - velocity;
         return Vector3.ClampMagnitude(steer, simManager.predatorMaxForce);
     }
+    private Vector3 CalculateBoundaryForce()
+    {
+        Vector3 desiredDirection = Vector3.zero;
+        Vector3 pos = transform.position;
+        float strength = 0.0f;
+
+        switch (simManager.shape)
+        {
+            case BoundaryShape.Circle:
+                float distFromCenter = pos.magnitude;
+                if (distFromCenter > simManager.boundaryRadius - simManager.boundaryMargin)
+                {
+                    desiredDirection = -pos.normalized;
+
+                    strength = Mathf.InverseLerp(simManager.boundaryRadius - simManager.boundaryMargin, simManager.boundaryRadius, distFromCenter);
+                }
+                break;
+
+            case BoundaryShape.Box:
+                float halfWidth = simManager.boundarySize.x / 2f;
+                float halfHeight = simManager.boundarySize.y / 2f;
+
+                if (pos.x > halfWidth - simManager.boundaryMargin)
+                {
+                    desiredDirection.x = -1;
+                    strength = Mathf.Max(strength, Mathf.InverseLerp(halfWidth - simManager.boundaryMargin, halfWidth, pos.x));
+                }
+                else if (pos.x < -halfWidth + simManager.boundaryMargin)
+                {
+                    desiredDirection.x = 1;
+                    strength = Mathf.Max(strength, Mathf.InverseLerp(-halfWidth + simManager.boundaryMargin, -halfWidth, pos.x));
+                }
+
+                if (pos.z > halfHeight - simManager.boundaryMargin)
+                {
+                    desiredDirection.z = -1;
+                    strength = Mathf.Max(strength, Mathf.InverseLerp(halfHeight - simManager.boundaryMargin, halfHeight, pos.z));
+                }
+                else if (pos.z < -halfHeight + simManager.boundaryMargin)
+                {
+                    desiredDirection.z = 1;
+                    strength = Mathf.Max(strength, Mathf.InverseLerp(-halfHeight + simManager.boundaryMargin, -halfHeight, pos.z));
+                }
+                break;
+        }
+
+        if (strength > 0)
+        {
+            Vector3 steer = desiredDirection.normalized * strength * simManager.boundaryForceMultiplier - velocity;
+            return Vector3.ClampMagnitude(steer, simManager.maxForce);
+        }
+
+        return Vector3.zero;
+    }
+
 
     void KeepOnGround()
     {
-        if (Physics.Raycast(transform.position + (Vector3.up * 4.0f), Vector3.down, out RaycastHit hit, 5.0f))
+        if (Physics.Raycast(transform.position + (Vector3.up * 4.0f), Vector3.down, out RaycastHit hit, 5.0f, LayerMask.GetMask("Ground")))
         {
             transform.position = hit.point;
         }

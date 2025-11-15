@@ -1,4 +1,5 @@
 using UnityEngine;
+using static SimulationManager;
 
 public class Prey : MonoBehaviour
 {
@@ -15,8 +16,9 @@ public class Prey : MonoBehaviour
     public float velocityMagnitude => velocity.magnitude;
     private float wanderAngle;
     private bool rolledOnDeath = false;
+    private float time = 0.0f;
 
-    
+
 
     void Start()
     {
@@ -27,8 +29,6 @@ public class Prey : MonoBehaviour
         wanderAngle = Random.Range(0f, 2f * Mathf.PI);
 
         simManager.preys.Add(this.gameObject);
-        KeepOnGround();
-
     }
 
     void OnDestroy()
@@ -39,16 +39,15 @@ public class Prey : MonoBehaviour
         }
     }
 
-    // === G³ówna Pêtla Logiki ===
     void Update()
     {
+        time += Time.deltaTime;
         if (isDead)
         {
             velocity *= 0.90f;
             transform.position += velocity * Time.deltaTime;
             if (!rolledOnDeath)
             {
-                // zachowaj aktualn¹ rotacjê w Y, dodaj 90 stopni do Z
                 Vector3 e = transform.eulerAngles;
                 e.z += 90f;
                 transform.rotation = Quaternion.Euler(e);
@@ -65,7 +64,11 @@ public class Prey : MonoBehaviour
             var emission = bleeding.emission;
             emission.rateOverTime = (1.0f - health) * 10.0f;
         }
-        CalculateForces();
+        if (time >= simManager.updateInterval)
+        {
+            time = 0.0f;
+            CalculateForces();
+        }
         ApplyMovement();
         UpdateState();
         KeepOnGround();
@@ -77,12 +80,26 @@ public class Prey : MonoBehaviour
         acceleration = Vector3.zero;
         isFleeing = false;
 
+        Vector3 boundaryForce = Vector3.zero;
+        if (simManager.enableBoundary)
+        {
+            boundaryForce = CalculateBoundaryForce();
+        }
+
+        if (boundaryForce.sqrMagnitude > 0)
+        {
+            acceleration += boundaryForce * simManager.boundaryAvoidanceWeight;
+        }
+
+
         Vector3 fleeForce = CalculateFleeForce();
         if (fleeForce.sqrMagnitude > 0)
         {
             isFleeing = true;
             acceleration += fleeForce * simManager.predatorAvoidanceWeight;
         }
+
+
 
         acceleration += CalculateFlockingForces();
         acceleration += CalculateWanderForce() * simManager.wanderWeight;
@@ -109,7 +126,12 @@ public class Prey : MonoBehaviour
 
         if (velocity.sqrMagnitude > 0.001f)
         {
-            transform.rotation = Quaternion.LookRotation(new Vector3(velocity.x, 0.0f, velocity.z).normalized);
+            Vector3 flatVel = new Vector3(velocity.x, 0.0f, velocity.z);
+            if (flatVel.sqrMagnitude > 0.0001f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(flatVel.normalized);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, simManager.rotationSmoothSpeed * Time.deltaTime);
+            }
         }
     }
 
@@ -222,9 +244,65 @@ public class Prey : MonoBehaviour
         return Vector3.ClampMagnitude(steer, simManager.maxForce);
     }
 
+    private Vector3 CalculateBoundaryForce()
+    {
+        Vector3 desiredDirection = Vector3.zero;
+        Vector3 pos = transform.position;
+        float strength = 0.0f;
+
+        switch (simManager.shape)
+        {
+            case BoundaryShape.Circle:
+                float distFromCenter = pos.magnitude;
+                if (distFromCenter > simManager.boundaryRadius - simManager.boundaryMargin)
+                {
+                    desiredDirection = -pos.normalized;
+
+                    strength = Mathf.InverseLerp(simManager.boundaryRadius - simManager.boundaryMargin, simManager.boundaryRadius, distFromCenter);
+                }
+                break;
+
+            case BoundaryShape.Box:
+                float halfWidth = simManager.boundarySize.x / 2f;
+                float halfHeight = simManager.boundarySize.y / 2f;
+
+                if (pos.x > halfWidth - simManager.boundaryMargin)
+                {
+                    desiredDirection.x = -1;
+                    strength = Mathf.Max(strength, Mathf.InverseLerp(halfWidth - simManager.boundaryMargin, halfWidth, pos.x));
+                }
+                else if (pos.x < -halfWidth + simManager.boundaryMargin)
+                {
+                    desiredDirection.x = 1;
+                    strength = Mathf.Max(strength, Mathf.InverseLerp(-halfWidth + simManager.boundaryMargin, -halfWidth, pos.x));
+                }
+
+                if (pos.z > halfHeight - simManager.boundaryMargin)
+                {
+                    desiredDirection.z = -1;
+                    strength = Mathf.Max(strength, Mathf.InverseLerp(halfHeight - simManager.boundaryMargin, halfHeight, pos.z));
+                }
+                else if (pos.z < -halfHeight + simManager.boundaryMargin)
+                {
+                    desiredDirection.z = 1;
+                    strength = Mathf.Max(strength, Mathf.InverseLerp(-halfHeight + simManager.boundaryMargin, -halfHeight, pos.z));
+                }
+                break;
+        }
+
+        if (strength > 0)
+        {
+            Vector3 steer = desiredDirection.normalized * strength * simManager.boundaryForceMultiplier - velocity;
+            return Vector3.ClampMagnitude(steer, simManager.maxForce);
+        }
+
+        return Vector3.zero;
+    }
+
+
     void KeepOnGround()
     {
-        if (Physics.Raycast(transform.position + (Vector3.up * 4.0f), Vector3.down, out RaycastHit hit, 5.0f))
+        if (Physics.Raycast(transform.position + (Vector3.up * 4.0f), Vector3.down, out RaycastHit hit, 5.0f, LayerMask.GetMask("Ground")))
         {
             transform.position = hit.point;
         }
