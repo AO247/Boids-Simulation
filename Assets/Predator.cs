@@ -12,6 +12,9 @@ public class Predator : MonoBehaviour
     private GameObject currentTarget;
     private float eatingCooldownTimer;
     private float hitCooldownTimer;
+    public float velocityMagnitude = 0;
+
+
     public bool eating = false;
     private float time = 0.0f;
     void Start()
@@ -33,6 +36,7 @@ public class Predator : MonoBehaviour
 
     void Update()
     {
+        velocityMagnitude = velocity.magnitude;
         time += Time.deltaTime;
         if (eatingCooldownTimer > 0)
         {
@@ -57,6 +61,7 @@ public class Predator : MonoBehaviour
     {
         acceleration = Vector3.zero;
         isChasing = false;
+        acceleration += CalculatePackForces();
 
         Vector3 boundaryForce = Vector3.zero;
         if (simManager.enableBoundary)
@@ -78,12 +83,13 @@ public class Predator : MonoBehaviour
         {
             isChasing = true;
             acceleration += chaseForce * simManager.chaseWeight;
+            acceleration.y = 0.0f;
+            acceleration = acceleration.normalized * simManager.predatorMaxForce;
         }
         else
         {
             acceleration += CalculateWanderForce();
         }
-        acceleration += CalculatePackForces();
 
         acceleration = Vector3.ClampMagnitude(acceleration, simManager.predatorMaxForce);
     }
@@ -329,6 +335,7 @@ public class Predator : MonoBehaviour
 
         if (strength > 0)
         {
+            desiredDirection.y = 0.0f;
             Vector3 steer = desiredDirection.normalized * strength * simManager.boundaryForceMultiplier - velocity;
             return Vector3.ClampMagnitude(steer, simManager.maxForce);
         }

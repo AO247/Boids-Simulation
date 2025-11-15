@@ -13,7 +13,7 @@ public class Prey : MonoBehaviour
     public float meat = 1.0f;
     [SerializeField] float friction = 0.9f;
     public bool isDead => health <= 0.0f;
-    public float velocityMagnitude => velocity.magnitude;
+    public float velocityMagnitude = 0;
     private float wanderAngle;
     private bool rolledOnDeath = false;
     private float time = 0.0f;
@@ -42,6 +42,7 @@ public class Prey : MonoBehaviour
     void Update()
     {
         time += Time.deltaTime;
+        velocityMagnitude = velocity.magnitude;
         if (isDead)
         {
             velocity *= 0.90f;
@@ -79,6 +80,10 @@ public class Prey : MonoBehaviour
     {
         acceleration = Vector3.zero;
         isFleeing = false;
+        acceleration += CalculateFlockingForces();
+        acceleration += CalculateWanderForce() * simManager.wanderWeight;
+
+
 
         Vector3 boundaryForce = Vector3.zero;
         if (simManager.enableBoundary)
@@ -97,12 +102,9 @@ public class Prey : MonoBehaviour
         {
             isFleeing = true;
             acceleration += fleeForce * simManager.predatorAvoidanceWeight;
+            acceleration.y = 0.0f;
+            acceleration = acceleration.normalized * simManager.maxForce;
         }
-
-
-
-        acceleration += CalculateFlockingForces();
-        acceleration += CalculateWanderForce() * simManager.wanderWeight;
 
         acceleration = Vector3.ClampMagnitude(acceleration, simManager.maxForce);
     }
@@ -205,17 +207,18 @@ public class Prey : MonoBehaviour
         foreach (var predator in simManager.predators)
         {
             float distance = Vector3.Distance(transform.position, predator.transform.position);
-            if (distance < simManager.predatorDetectionRadius)
+            if (distance > 0 && distance < simManager.predatorDetectionRadius)
             {
-                fleeVector += (transform.position - predator.transform.position).normalized;
+                fleeVector += (transform.position - predator.transform.position).normalized / (distance / 2.0f);
+
                 predatorsNearby++;
             }
         }
 
         if (predatorsNearby > 0)
         {
+
             fleeVector.y = 0.0f;
-            fleeVector /= predatorsNearby;
             return Steer(fleeVector);
         }
 
@@ -292,6 +295,7 @@ public class Prey : MonoBehaviour
 
         if (strength > 0)
         {
+            desiredDirection.y = 0;
             Vector3 steer = desiredDirection.normalized * strength * simManager.boundaryForceMultiplier - velocity;
             return Vector3.ClampMagnitude(steer, simManager.maxForce);
         }

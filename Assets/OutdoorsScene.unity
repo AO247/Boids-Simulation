@@ -775,7 +775,7 @@ MonoBehaviour:
   cohesionRadius: 20
   predatorDetectionRadius: 50
   maxForce: 10
-  maxSpeed: 8
+  maxSpeed: 10
   seperationWeight: 100
   alignmentWeight: 1
   cohesionWeight: 1
@@ -787,7 +787,7 @@ MonoBehaviour:
   wanderDistance: 2
   wanderJitter: 4
   wanderWeight: 2
-  predatorMaxSpeed: 6
+  predatorMaxSpeed: 5
   predatorMaxForce: 10
   predatorFriction: 0.9
   predatorSeperationRadius: 10
@@ -808,8 +808,8 @@ MonoBehaviour:
   boundaryRadius: 300
   boundarySize: {x: 200, y: 200}
   boundaryMargin: 50
-  boundaryAvoidanceWeight: 3
-  boundaryForceMultiplier: 50
+  boundaryAvoidanceWeight: 3.5
+  boundaryForceMultiplier: 100
 --- !u!4 &1975339579
 Transform:
   m_ObjectHideFlags: 0
