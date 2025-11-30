@@ -17,6 +17,8 @@ public class Prey : MonoBehaviour
     private float wanderAngle;
     private bool rolledOnDeath = false;
     private float time = 0.0f;
+    private LayerMask obstacleLayer;
+
 
     private Animator animator;
 
@@ -31,6 +33,8 @@ public class Prey : MonoBehaviour
         wanderAngle = Random.Range(0f, 2f * Mathf.PI);
 
         simManager.preys.Add(this.gameObject);
+        obstacleLayer = LayerMask.GetMask("Obstacle");
+
     }
 
     void OnDestroy()
@@ -71,11 +75,9 @@ public class Prey : MonoBehaviour
             var emission = bleeding.emission;
             emission.rateOverTime = (1.0f - health) * 10.0f;
         }
-        if (time >= simManager.updateInterval)
-        {
-            time = 0.0f;
-            CalculateForces();
-        }
+
+        CalculateForces();
+
         ApplyMovement();
         UpdateState();
         KeepOnGround();
@@ -86,6 +88,10 @@ public class Prey : MonoBehaviour
     {
         acceleration = Vector3.zero;
         isFleeing = false;
+
+        Vector3 obstacleAvoidanceForce = CalculateObstacleAvoidanceForce();
+        acceleration += obstacleAvoidanceForce * simManager.obstacleAvoidanceWeight;
+
         acceleration += CalculateFlockingForces();
         acceleration += CalculateWanderForce() * simManager.wanderWeight;
 
@@ -130,7 +136,7 @@ public class Prey : MonoBehaviour
         transform.position += velocity * Time.deltaTime;
 
         velocity *= (1.0f - Time.deltaTime * friction);
-        velocity.y += -9.81f * Time.deltaTime;
+        //velocity.y += -9.81f * Time.deltaTime;
 
         if (velocity.sqrMagnitude > 0.001f)
         {
@@ -309,10 +315,48 @@ public class Prey : MonoBehaviour
         return Vector3.zero;
     }
 
+    private Vector3 CalculateObstacleAvoidanceForce()
+    {
+        Vector3 avoidanceForce = Vector3.zero;
+        Vector3 forward = transform.forward;
+        Vector3 position = transform.position;
+        float distance = simManager.obstacleAvoidanceDistance;
+
+        // "W¹s" œrodkowy - prosto przed siebie
+        if (Physics.Raycast(position, forward, distance, obstacleLayer))
+        {
+            // Jeœli coœ jest prosto przed nami, mocno skrêæ w bok
+            avoidanceForce += transform.right * 2; // Skrêæ w prawo (mo¿na losowaæ)
+        }
+
+        // "W¹s" prawy
+        Quaternion rightRot = Quaternion.AngleAxis(simManager.whiskerAngle, Vector3.up);
+        if (Physics.Raycast(position, rightRot * forward, distance, obstacleLayer))
+        {
+            // Jeœli coœ jest po prawej, skrêæ w lewo
+            avoidanceForce -= transform.right;
+        }
+
+        // "W¹s" lewy
+        Quaternion leftRot = Quaternion.AngleAxis(-simManager.whiskerAngle, Vector3.up);
+        if (Physics.Raycast(position, leftRot * forward, distance, obstacleLayer))
+        {
+            // Jeœli coœ jest po lewej, skrêæ w prawo
+            avoidanceForce += transform.right;
+        }
+
+        // Rysuj promienie w edytorze dla ³atwiejszego debugowania
+        Debug.DrawRay(position, forward * distance, Color.blue);
+        Debug.DrawRay(position, rightRot * forward * distance, Color.blue);
+        Debug.DrawRay(position, leftRot * forward * distance, Color.blue);
+
+        return avoidanceForce.normalized;
+    }
+
 
     void KeepOnGround()
     {
-        if (Physics.Raycast(transform.position + (Vector3.up * 4.0f), Vector3.down, out RaycastHit hit, 5.0f, LayerMask.GetMask("Ground")))
+        if (Physics.Raycast(transform.position + (Vector3.up * 15.0f), Vector3.down, out RaycastHit hit, 60.0f, LayerMask.GetMask("Ground")))
         {
             transform.position = hit.point;
         }

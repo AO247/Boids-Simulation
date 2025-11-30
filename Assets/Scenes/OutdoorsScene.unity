@@ -6099,15 +6099,15 @@ MonoBehaviour:
   maxForce: 10
   maxSpeed: 10
   seperationWeight: 100
-  alignmentWeight: 1
-  cohesionWeight: 1
+  alignmentWeight: 1.5
+  cohesionWeight: 1.5
   predatorAvoidanceWeight: 3
   randomMovementWeight: 0.5
   fatigueRecoveryRate: 0.04
   fatigueIncreaseRate: 0.02
   wanderRadius: 4
   wanderDistance: 2
-  wanderJitter: 4
+  wanderJitter: 2
   wanderWeight: 2
   predatorMaxSpeed: 5
   predatorMaxForce: 10
@@ -6125,9 +6125,19 @@ MonoBehaviour:
   eatingCooldown: 2
   hitCooldown: 3
   damagePerHit: 0.2
+  obstacleAvoidanceDistance: 10
+  obstacleAvoidanceWeight: 5
+  whiskerAngle: 30
+  totalPreyCount: 50
+  totalPredatorCount: 18
+  preyGroupSize: {x: 5, y: 6}
+  predatorGroupSize: 3
+  spawnRadius: 200
+  groupSpawnRadius: 15
+  spawnHeight: 10
   enableBoundary: 1
   shape: 0
-  boundaryRadius: 832.1
+  boundaryRadius: 500
   boundarySize: {x: 200, y: 200}
   boundaryMargin: 50
   boundaryAvoidanceWeight: 3.5

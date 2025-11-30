@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-
+using TMPro;
 public class SimulationManager : MonoBehaviour
 {
     public static SimulationManager Instance { get; private set; }
@@ -55,6 +55,36 @@ public class SimulationManager : MonoBehaviour
     public float hitCooldown = 3.0f;
     public float damagePerHit = 0.2f;
 
+    [Header("★★★ OBSTACLE AVOIDANCE SETTINGS ★★★")]
+    [Tooltip("Jak daleko przed siebie agenci mają 'patrzeć' w poszukiwaniu przeszkód.")]
+    public float obstacleAvoidanceDistance = 10.0f;
+
+    [Tooltip("Jak silna ma być siła omijania przeszkód.")]
+    public float obstacleAvoidanceWeight = 5.0f;
+
+    [Tooltip("Kąt, pod jakim 'wąsy' są rozstawione po bokach.")]
+    public float whiskerAngle = 30.0f;
+
+
+    [Header("★★★ SPAWN SETTINGS ★★★")]
+    [Tooltip("Całkowita liczba ofiar do zespawnowania.")]
+    [SerializeField] private int totalPreyCount = 50;
+    [Tooltip("Całkowita liczba drapieżników do zespawnowania.")]
+    [SerializeField] private int totalPredatorCount = 5;
+    [Space]
+    [Tooltip("Minimalna i maksymalna liczba ofiar w jednej grupie.")]
+    [SerializeField] private Vector2Int preyGroupSize = new Vector2Int(5, 6);
+    [Tooltip("Liczba drapieżników w jednej grupie.")]
+    [SerializeField] private int predatorGroupSize = 3;
+    [Space]
+    [Tooltip("Promień, w którym będą pojawiać się grupy.")]
+    [SerializeField] private float spawnRadius = 500f;
+    [Tooltip("Jak blisko siebie mogą pojawić się osobniki w jednej grupie.")]
+    [SerializeField] private float groupSpawnRadius = 5.0f;
+    [Tooltip("Wysokość, na której pojawiają się agenci (powinni potem opaść na ziemię).")]
+    [SerializeField] private float spawnHeight = 10.0f;
+
+
     [Header("★★★ ISLAND BOUNDARY SETTINGS ★★★")]
     public bool enableBoundary = true;
     public enum BoundaryShape { Circle, Box }
@@ -71,6 +101,16 @@ public class SimulationManager : MonoBehaviour
     public float boundaryAvoidanceWeight = 4.0f;
     public float boundaryForceMultiplier = 50.0f;
 
+
+    [Header("★★★ SIMULATION SPEED ★★★")]
+    [Range(0f, 10f)]
+    public float simulationTimeScale = 1.0f;
+
+
+    [Header("★★★ SIMULATION TIME DISPLAY ★★★")]
+    [SerializeField] private TextMeshProUGUI simulationTimeText;
+    private float totalSimulationTime = 0.0f;
+
     void Awake()
     {
         if (Instance == null)
@@ -83,27 +123,78 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
-    void Start()
-    {
-        for (int i = 0; i < preyCount; i++)
-        {
-            Vector3 preyPosition = new Vector3(Random.Range(-10f, 10f), 10.0f, Random.Range(-10f, 10f));
-            GameObject prey = Instantiate(preyPrefab, preyPosition, Quaternion.identity);
-            preys.Add(prey);
-        }
-        for (int i = 0; i < predatorCount; i++)
-        {
-            Vector3 predatorPosition = new Vector3(Random.Range(15f, 20f), 10.0f, Random.Range(15f, 20f));
-            GameObject predator = Instantiate(predatorPrefab, predatorPosition, Quaternion.identity);
-            predators.Add(predator);
-        }
-    }
-
     void Update()
     {
+        // Aktualizuj globalny mnożnik czasu na podstawie ustawienia symulacji
+        Time.timeScale = simulationTimeScale;
+        totalSimulationTime += Time.deltaTime;
 
+        // 3. Zaktualizuj tekst na ekranie
+        UpdateSimulationTimeDisplay();
     }
-     
+
+    // --- NOWA FUNKCJA DO FORMATOWANIA I WYŚWIETLANIA CZASU ---
+    private void UpdateSimulationTimeDisplay()
+    {
+        if (simulationTimeText == null) return;
+
+        // Przelicz totalSimulationTime na godziny, minuty i sekundy
+        float time = totalSimulationTime;
+
+        int hours = (int)(time / 3600);
+        time %= 3600;
+        int minutes = (int)(time / 60);
+        int seconds = (int)(time % 60);
+
+        // Użyj String.Format, aby stworzyć elegancki, czytelny tekst
+        simulationTimeText.text = string.Format("Czas Symulacji: {0:00}:{1:00}:{2:00}", hours, minutes, seconds);
+    }
+    void Start()
+    {
+        // Spawnowanie ofiar w grupach
+        SpawnInGroups(preyPrefab, totalPreyCount, preyGroupSize.x, preyGroupSize.y, preys);
+
+        // Spawnowanie drapieżników w grupach
+        SpawnInGroups(predatorPrefab, totalPredatorCount, predatorGroupSize, predatorGroupSize, predators);
+    }
+    private void SpawnInGroups(GameObject prefab, int totalCount, int minGroupSize, int maxGroupSize, List<GameObject> targetList)
+    {
+        int spawnedCount = 0;
+        while (spawnedCount < totalCount)
+        {
+            // 1. Znajdź losowy środek dla nowej grupy wewnątrz dużej sfery
+            Vector2 randomPointOnCircle = Random.insideUnitCircle * spawnRadius;
+            Vector3 groupCenter = new Vector3(randomPointOnCircle.x, spawnHeight, randomPointOnCircle.y);
+
+            // 2. Określ losowy rozmiar dla tej grupy
+            int currentGroupSize = Random.Range(minGroupSize, maxGroupSize + 1);
+
+            // 3. Spawnowanie osobników w tej grupie
+            for (int i = 0; i < currentGroupSize; i++)
+            {
+                // Sprawdź, czy nie przekroczyliśmy całkowitej liczby do zespawnowania
+                if (spawnedCount >= totalCount) break;
+
+                // Znajdź losową pozycję dla osobnika blisko środka grupy
+                Vector2 randomPointInGroup = Random.insideUnitCircle * groupSpawnRadius;
+                Vector3 spawnPosition = groupCenter + new Vector3(randomPointInGroup.x, 0, randomPointInGroup.y);
+
+                // Stwórz instancję obiektu
+                GameObject newAgent = Instantiate(prefab, spawnPosition, Quaternion.identity);
+                targetList.Add(newAgent);
+
+                spawnedCount++;
+            }
+        }
+    }
+    public void SetTimeScale(float newTimeScale)
+    {
+        // Ustaw globalny mnożnik czasu w Unity
+        Time.timeScale = newTimeScale;
+
+        // Możesz dodać log, aby widzieć, jaka jest aktualna wartość
+        Debug.Log($"Time scale set to: {newTimeScale}");
+    }
     private void OnDrawGizmos()
     {
         if (!enableBoundary) return;

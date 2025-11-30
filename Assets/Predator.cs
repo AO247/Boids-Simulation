@@ -15,7 +15,7 @@ public class Predator : MonoBehaviour
     public float velocityMagnitude = 0;
 
     private Animator animator;
-
+    private LayerMask obstacleLayer;
     public bool eating = false;
     private float time = 0.0f;
     void Start()
@@ -24,7 +24,7 @@ public class Predator : MonoBehaviour
         simManager = SimulationManager.Instance;
         velocity = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
         wanderAngle = Random.Range(0f, 2f * Mathf.PI);
-
+        obstacleLayer = LayerMask.GetMask("Obstacle");
         simManager.predators.Add(this.gameObject);
     }
 
@@ -53,9 +53,9 @@ public class Predator : MonoBehaviour
             time = 0.0f;
             CalculateForces();
         }
+        UpdateState();
         CalculateForces();
         ApplyMovement();
-        UpdateState();
         KeepOnGround();
     }
 
@@ -63,6 +63,9 @@ public class Predator : MonoBehaviour
     {
         acceleration = Vector3.zero;
         isChasing = false;
+
+        Vector3 obstacleAvoidanceForce = CalculateObstacleAvoidanceForce();
+        acceleration += obstacleAvoidanceForce * simManager.obstacleAvoidanceWeight;
         acceleration += CalculatePackForces();
 
         Vector3 boundaryForce = Vector3.zero;
@@ -109,7 +112,9 @@ public class Predator : MonoBehaviour
         transform.position += velocity * Time.deltaTime;
 
         velocity *= (1.0f - Time.deltaTime * simManager.predatorFriction);
-        velocity.y += -9.81f * Time.deltaTime;
+
+        //if(eating == false)
+        //    velocity.y += -9.81f * Time.deltaTime;
 
         if (velocity.sqrMagnitude > 0.001f)
         {
@@ -196,6 +201,7 @@ public class Predator : MonoBehaviour
     private void Eat()
     {
         velocity *= 0.90f;
+        velocity.y = 0.0f;
         if (eatingCooldownTimer > 0.0f)
         {
             eatingCooldownTimer -= Time.deltaTime;
@@ -350,11 +356,40 @@ public class Predator : MonoBehaviour
 
         return Vector3.zero;
     }
+    private Vector3 CalculateObstacleAvoidanceForce()
+    {
+        Vector3 avoidanceForce = Vector3.zero;
+        Vector3 forward = transform.forward;
+        Vector3 position = transform.position;
+        float distance = simManager.obstacleAvoidanceDistance;
 
+        if (Physics.Raycast(position, forward, distance, obstacleLayer))
+        {
+            avoidanceForce += transform.right * 2;
+        }
+
+        Quaternion rightRot = Quaternion.AngleAxis(simManager.whiskerAngle, Vector3.up);
+        if (Physics.Raycast(position, rightRot * forward, distance, obstacleLayer))
+        {
+            avoidanceForce -= transform.right;
+        }
+
+        Quaternion leftRot = Quaternion.AngleAxis(-simManager.whiskerAngle, Vector3.up);
+        if (Physics.Raycast(position, leftRot * forward, distance, obstacleLayer))
+        {
+            avoidanceForce += transform.right;
+        }
+
+        Debug.DrawRay(position, forward * distance, Color.red);
+        Debug.DrawRay(position, rightRot * forward * distance, Color.red);
+        Debug.DrawRay(position, leftRot * forward * distance, Color.red);
+
+        return avoidanceForce.normalized;
+    }
 
     void KeepOnGround()
     {
-        if (Physics.Raycast(transform.position + (Vector3.up * 4.0f), Vector3.down, out RaycastHit hit, 5.0f, LayerMask.GetMask("Ground")))
+        if (Physics.Raycast(transform.position + (Vector3.up * 15.0f), Vector3.down, out RaycastHit hit, 60.0f, LayerMask.GetMask("Ground")))
         {
             transform.position = hit.point;
         }
