@@ -129,7 +129,7 @@ public class Predator : MonoBehaviour
 
     private void UpdateState()
     {
-        hunger += Time.deltaTime * 0.01f;
+        hunger += Time.deltaTime * simManager.predatorHungerRate;
         hunger = Mathf.Clamp01(hunger);
 
         if (currentTarget != null)

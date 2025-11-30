@@ -154,7 +154,8 @@ public class Prey : MonoBehaviour
     {
         if (isFleeing)
         {
-            fatigue += simManager.fatigueIncreaseRate * Time.deltaTime;
+            // Zamiast: fatigue += simManager.fatigueIncreaseRate * Time.deltaTime;
+            fatigue += simManager.preyFatigueRate * Time.deltaTime;
         }
         else
         {
