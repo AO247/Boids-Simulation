@@ -3,8 +3,7 @@ using UnityEngine;
 
 public class SimulationManager : MonoBehaviour
 {
-    public static SimulationManager Instance { get; private set;}
-
+    public static SimulationManager Instance { get; private set; }
 
     [SerializeField] GameObject preyPrefab;
     [SerializeField] GameObject predatorPrefab;
@@ -72,10 +71,6 @@ public class SimulationManager : MonoBehaviour
     public float boundaryAvoidanceWeight = 4.0f;
     public float boundaryForceMultiplier = 50.0f;
 
-
-
-
-
     void Awake()
     {
         if (Instance == null)
@@ -107,5 +102,37 @@ public class SimulationManager : MonoBehaviour
     void Update()
     {
 
+    }
+     
+    private void OnDrawGizmos()
+    {
+        if (!enableBoundary) return;
+         
+        Vector3 center = transform.position;
+         
+        Gizmos.color = new Color(1f, 0f, 0f, 1f);  
+        if (shape == BoundaryShape.Circle)
+        {
+            Gizmos.DrawWireSphere(center, boundaryRadius);
+        }
+        else  
+        { 
+            Vector3 size = new Vector3(boundarySize.x, 1f, boundarySize.y);
+            Gizmos.DrawWireCube(center, size);
+        }
+         
+        Gizmos.color = new Color(1f, 0.92f, 0.016f, 0.8f); 
+        if (shape == BoundaryShape.Circle)
+        {
+            float marginRadius = Mathf.Max(0, boundaryRadius - boundaryMargin);
+            Gizmos.DrawWireSphere(center, marginRadius);
+        }
+        else  
+        {
+             float sizeX = Mathf.Max(0, boundarySize.x - (boundaryMargin * 2));
+            float sizeZ = Mathf.Max(0, boundarySize.y - (boundaryMargin * 2));
+            Vector3 marginSize = new Vector3(sizeX, 1f, sizeZ);
+            Gizmos.DrawWireCube(center, marginSize);
+        }
     }
 }

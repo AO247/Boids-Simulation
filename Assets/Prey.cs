@@ -18,10 +18,12 @@ public class Prey : MonoBehaviour
     private bool rolledOnDeath = false;
     private float time = 0.0f;
 
+    private Animator animator;
 
 
     void Start()
     {
+        animator = GetComponent<Animator>();
         simManager = SimulationManager.Instance;
 
         velocity = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
@@ -45,20 +47,23 @@ public class Prey : MonoBehaviour
         velocityMagnitude = velocity.magnitude;
         if (isDead)
         {
+
             velocity *= 0.90f;
             transform.position += velocity * Time.deltaTime;
             if (!rolledOnDeath)
             {
                 Vector3 e = transform.eulerAngles;
                 e.z += 90f;
-                transform.rotation = Quaternion.Euler(e);
+                //transform.rotation = Quaternion.Euler(e);
+                animator.SetBool("isDead", true);
+
                 rolledOnDeath = true;
             }
             return;
         }
         if(health < 1.0f )
         {
-            if(!bleeding.isPlaying)
+            if (!bleeding.isPlaying)
             {
                 bleeding.Play();
             }

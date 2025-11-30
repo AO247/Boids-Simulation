@@ -14,11 +14,13 @@ public class Predator : MonoBehaviour
     private float hitCooldownTimer;
     public float velocityMagnitude = 0;
 
+    private Animator animator;
 
     public bool eating = false;
     private float time = 0.0f;
     void Start()
     {
+        animator = GetComponent<Animator>();
         simManager = SimulationManager.Instance;
         velocity = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
         wanderAngle = Random.Range(0f, 2f * Mathf.PI);
@@ -177,10 +179,12 @@ public class Predator : MonoBehaviour
         if(hitCooldownTimer > 0.0f)
         {
             hitCooldownTimer -= Time.deltaTime;
+            animator.SetBool("isAttacking", false);
             return;
         }
         if (Vector3.Distance(transform.position, currentTarget.transform.position) < simManager.hitDistance)
         {
+            animator.SetBool("isAttacking", true);
             currentTarget.GetComponent<Prey>().health -= simManager.damagePerHit;
             if (currentTarget.GetComponent<Prey>().health <= 0.0f)
             {
@@ -201,6 +205,7 @@ public class Predator : MonoBehaviour
         if (Vector3.Distance(transform.position, currentTarget.transform.position) < simManager.eatDistance)
         {
             eating = true;
+            animator.SetBool("isEating", true);
             currentTarget.GetComponent<Prey>().meat -= 0.1f;
             hunger = Mathf.Max(-0.3f, hunger - 0.2f);
             eatingCooldownTimer = simManager.eatingCooldown;
@@ -210,11 +215,14 @@ public class Predator : MonoBehaviour
                 simManager.preys.Remove(currentTarget);
                 Destroy(currentTarget);
                 currentTarget = null;
+                animator.SetBool("isEating", false);
             }
         }
         else
         {
             eating = false;
+            animator.SetBool("isEating", false);
+
         }
 
     }
