@@ -65,6 +65,7 @@ public class Prey : MonoBehaviour
         {
             if (!bleeding.isPlaying)
             {
+                animator.SetBool("isHurt", true);
                 bleeding.Play();
             }
             var emission = bleeding.emission;
