@@ -153,6 +153,8 @@ public class SimulationManager : MonoBehaviour
         totalSimulationTime += Time.deltaTime;
         UpdateSimulationTimeDisplay();
         HandleReproduction();
+        currentPreyCount = preys.Count;
+        currentPredatorCount = predators.Count;
     }
 
     void HandleReproduction()

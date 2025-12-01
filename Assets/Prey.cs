@@ -20,7 +20,7 @@ public class Prey : MonoBehaviour
     private LayerMask obstacleLayer;
 
 
-    private Animator animator;
+    public Animator animator;
 
 
     void Start()
@@ -69,7 +69,6 @@ public class Prey : MonoBehaviour
         {
             if (!bleeding.isPlaying)
             {
-                animator.SetBool("isHurt", true);
                 bleeding.Play();
             }
             var emission = bleeding.emission;

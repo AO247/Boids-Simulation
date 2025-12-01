@@ -6344,59 +6344,58 @@ MonoBehaviour:
   simulationTimeScale: 1
   totalPreyCount: 50
   totalPredatorCount: 18
-  preyReproductionChance: 0.001
-  predatorHungerRate: 0.001
-  preyFatigueRate: 0.05
   maxSpeed: 10
-  predatorMaxSpeed: 6
-  predatorDetectionRadius: 70
-  predatorAvoidanceWeight: 3
-  cohesionWeight: 1.5
-  preyDetectionRadius: 100
-  chaseWeight: 5
-  enableBoundary: 1
-  boundaryRadius: 500
-  updateInterval: 0.1
-  rotationSmoothSpeed: 5
-  seperationRadius: 7
-  alignmentRadius: 20
-  cohesionRadius: 20
   maxForce: 10
-  seperationWeight: 100
-  alignmentWeight: 1.5
-  randomMovementWeight: 0.5
+  predatorDetectionRadius: 60
+  predatorAvoidanceWeight: 3
   fatigueRecoveryRate: 0.04
   fatigueIncreaseRate: 0.02
+  predatorMaxSpeed: 6
+  predatorMaxForce: 10
+  preyDetectionRadius: 70
+  chaseWeight: 3
+  predatorHungerRate: 0.001
+  damagePerHit: 0.2
+  hitCooldown: 3
+  seperationRadius: 9
+  seperationWeight: 5
+  alignmentRadius: 20
+  alignmentWeight: 1.5
+  cohesionRadius: 20
+  cohesionWeight: 1.5
+  updateInterval: 0.1
+  rotationSmoothSpeed: 5
+  randomMovementWeight: 0.5
   wanderRadius: 4
   wanderDistance: 2
   wanderJitter: 2
-  wanderWeight: 2
-  predatorMaxForce: 10
+  wanderWeight: 1.3
   predatorFriction: 0.9
   predatorSeperationRadius: 10
   predatorAlignmentRadius: 10
   predatorCohesionRadius: 10
-  predatorSeperationWeight: 100
+  predatorSeperationWeight: 5
   predatorAlignmentWeight: 1
   predatorCohesionWeight: 1
-  eatDistance: 3.3
   hitDistance: 4
+  eatDistance: 3.3
   eatingCooldown: 2
-  hitCooldown: 3
-  damagePerHit: 0.2
   obstacleAvoidanceDistance: 10
   obstacleAvoidanceWeight: 5
   whiskerAngle: 30
   preyGroupSize: {x: 5, y: 6}
   predatorGroupSize: 3
-  spawnRadius: 200
+  spawnRadius: 250
   groupSpawnRadius: 15
   spawnHeight: 10
+  enableBoundary: 1
   shape: 0
+  boundaryRadius: 400
   boundarySize: {x: 200, y: 200}
   boundaryMargin: 50
   boundaryAvoidanceWeight: 3.5
   boundaryForceMultiplier: 100
+  preyReproductionChance: 0
   preys: []
   predators: []
   simulationTimeText: {fileID: 1026961905}

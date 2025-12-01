@@ -146,6 +146,11 @@ public class Predator : MonoBehaviour
                 TryToKill();
             }
         }
+        else
+        {
+            eating = false;
+            animator.SetBool("isEating", false);
+        }    
     }
 
 
@@ -193,6 +198,7 @@ public class Predator : MonoBehaviour
         {
             animator.SetBool("isAttacking", true);
             currentTarget.GetComponent<Prey>().health -= simManager.damagePerHit;
+            currentTarget.GetComponent<Prey>().animator.SetTrigger("Hurt");
             if (currentTarget.GetComponent<Prey>().health <= 0.0f)
             {
                 currentTarget.GetComponent<Prey>().health = 0.0f;
