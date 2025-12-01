@@ -102,6 +102,8 @@ public class Predator : MonoBehaviour
     private void ApplyMovement()
     {
         if (eating) return;
+        animator.SetBool("isAttacking", false);
+        animator.SetBool("isEating", false);
         velocity += acceleration * Time.deltaTime;
 
         float speedMultiplier = 1.0f + hunger * 0.5f;
