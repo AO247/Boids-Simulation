@@ -12,8 +12,8 @@ public class SimulationManager : MonoBehaviour
     // =====================================================================
 
     [Header("▶ STAN SYMULACJI (TYLKO DO ODCZYTU)")]
-    [SerializeField, ReadOnly] private int currentPreyCount;
-    [SerializeField, ReadOnly] private int currentPredatorCount;
+    [SerializeField] private int currentPreyCount;
+    [SerializeField] private int currentPredatorCount;
 
     [Header("▶ OGÓLNE USTAWIENIA SYMULACJI")]
     [Tooltip("Kontroluje globalną prędkość upływu czasu.")]
@@ -135,6 +135,8 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] private GameObject predatorPrefab;
     private float totalSimulationTime = 0.0f;
 
+    public GameObject parameters;
+
     void Awake()
     {
         if (Instance == null) { Instance = this; }
@@ -149,6 +151,10 @@ public class SimulationManager : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            parameters.SetActive(!parameters.activeSelf);
+        }
         Time.timeScale = simulationTimeScale;
         totalSimulationTime += Time.deltaTime;
         UpdateSimulationTimeDisplay();
@@ -224,20 +230,38 @@ public class SimulationManager : MonoBehaviour
         if (shape == BoundaryShape.Circle) { Gizmos.DrawWireSphere(center, Mathf.Max(0, boundaryRadius - boundaryMargin)); }
         else { Gizmos.DrawWireCube(center, new Vector3(Mathf.Max(0, boundarySize.x - (boundaryMargin * 2)), 1f, Mathf.Max(0, boundarySize.y - (boundaryMargin * 2)))); }
     }
+
+    #region UI_CALLBACK_FUNCTIONS
+
+    // --- Zachowanie Ofiar (Prey) ---
+
+    public void SetSimulationTimeScale(float value) => simulationTimeScale = value;
+    public void SetPreyMaxSpeed(float value) => maxSpeed = value;
+    public void SetPreyMaxForce(float value) => maxForce = value;
+    public void SetPreyPredatorDetectionRadius(float value) => predatorDetectionRadius = value;
+    public void SetPreyFleeWeight(float value) => predatorAvoidanceWeight = value;
+    public void SetPreyFatigueRegeneration(float value) => fatigueRecoveryRate = value;
+    public void SetPreyFatigueRate(float value) => fatigueIncreaseRate = value;
+
+    // --- Zachowanie Drapieżników (Predator) ---
+    public void SetPredatorMaxSpeed(float value) => predatorMaxSpeed = value;
+    public void SetPredatorMaxForce(float value) => predatorMaxForce = value;
+    public void SetPredatorPreyDetectionRadius(float value) => preyDetectionRadius = value;
+    public void SetPredatorChaseWeight(float value) => chaseWeight = value;
+    public void SetPredatorHungerRate(float value) => predatorHungerRate = value;
+    public void SetPredatorDamagePerHit(float value) => damagePerHit = value;
+    public void SetPredatorAttackCooldown(float value) => hitCooldown = value;
+
+    // --- Zachowanie Stadne (Boids) ---
+    public void SetSeparationRange(float value) => seperationRadius = value;
+    public void SetSeparationWeight(float value) => seperationWeight = value;
+    public void SetAlignmentRange(float value) => alignmentRadius = value;
+    public void SetAlignmentWeight(float value) => alignmentWeight = value;
+    public void SetCohesionRange(float value) => cohesionRadius = value;
+    public void SetCohesionWeight(float value) => cohesionWeight = value;
+
+    #endregion
+
 }
 
 
-
-
-public class ReadOnlyAttribute : PropertyAttribute { }
-[UnityEditor.CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
-public class ReadOnlyDrawer : UnityEditor.PropertyDrawer
-{
-    public override void OnGUI(Rect position, UnityEditor.SerializedProperty property, GUIContent label)
-    {
-        bool wasEnabled = GUI.enabled;
-        GUI.enabled = false;
-        UnityEditor.EditorGUI.PropertyField(position, property, label, true);
-        GUI.enabled = wasEnabled;
-    }
-}
