@@ -7,6 +7,10 @@ public class SimulationManager : MonoBehaviour
 {
     public static SimulationManager Instance { get; private set; }
 
+    // =====================================================================
+    // ||             GŁÓWNE PARAMETRY DLA UŻYTKOWNIKA                    ||
+    // =====================================================================
+
     [Header("▶ STAN SYMULACJI (TYLKO DO ODCZYTU)")]
     [SerializeField, ReadOnly] private int currentPreyCount;
     [SerializeField, ReadOnly] private int currentPredatorCount;
@@ -19,35 +23,50 @@ public class SimulationManager : MonoBehaviour
     [Tooltip("Początkowa liczba drapieżników w symulacji.")]
     [Range(0, 50)] public int totalPredatorCount = 5;
 
-    [Header("▶ USTAWIENIA PRZETRWANIA (SURVIVAL)")]
-    [Tooltip("Szansa na pojawienie się nowego potomstwa ofiar (na sekundę na parę).")]
-    [Range(0f, 0.01f)] public float preyReproductionChance = 0.001f;
-    [Tooltip("Jak szybko drapieżniki stają się głodne (jednostki na sekundę).")]
-    [Range(0.001f, 0.1f)] public float predatorHungerRate = 0.01f;
-    [Tooltip("Jak szybko ofiary męczą się podczas ucieczki (jednostki na sekundę).")]
-    [Range(0.01f, 0.2f)] public float preyFatigueRate = 0.05f;
-
-    [Header("▶ USTAWIENIA ZACHOWAŃ (BEHAVIOR)")]
+    [Header("▶ ZACHOWANIE OFIAR (PREY)")]
     [Tooltip("Maksymalna prędkość poruszania się ofiary.")]
-    [Range(1f, 15f)] public float maxSpeed = 3.0f;
-    [Tooltip("Maksymalna prędkość poruszania się drapieżnika w pościgu.")]
-    [Range(1f, 15f)] public float predatorMaxSpeed = 6.0f;
-    [Tooltip("Z jakiej odległości ofiara może wykryć drapieżnika i zacząć uciekać.")]
-    [Range(5f, 70f)] public float predatorDetectionRadius = 20.0f;
+    [Range(1f, 15f)] public float maxSpeed = 10.0f;
+    [Tooltip("Maksymalna siła sterująca ofiary (jak gwałtownie może skręcać).")]
+    [Range(1f, 15f)] public float maxForce = 10f;
+    [Tooltip("Z jakiej odległości ofiara wykrywa drapieżnika.")]
+    [Range(5f, 70f)] public float predatorDetectionRadius = 50.0f;
     [Tooltip("Jak silnie ofiara unika drapieżnika (siła 'strachu').")]
-    [Range(0f, 10f)] public float predatorAvoidanceWeight = 2.0f;
-    [Tooltip("Jak silnie ofiary trzymają się razem w stadzie (instynkt stadny).")]
-    [Range(0f, 5f)] public float cohesionWeight = 1.5f;
-    [Tooltip("Z jakiej odległości drapieżnik może wykryć ofiarę i zacząć polować.")]
-    [Range(10f, 100f)] public float preyDetectionRadius = 50.0f;
-    [Tooltip("Jak agresywnie drapieżnik skupia się na celu (vs. trzymanie się stada).")]
-    [Range(0f, 5f)] public float chaseWeight = 3.0f;
+    [Range(0f, 5f)] public float predatorAvoidanceWeight = 3.0f; // flee weight
+    [Tooltip("Jak szybko ofiara regeneruje siły, gdy nie ucieka.")]
+    [Range(0.001f, 0.1f)] public float fatigueRecoveryRate = 0.02f; // fatigue regeneration
+    [Tooltip("Jak szybko ofiara męczy się podczas ucieczki.")]
+    [Range(0.001f, 0.1f)] public float fatigueIncreaseRate = 0.05f; // fatigue rate
 
-    [Header("▶ USTAWIENIA ŚWIATA")]
-    [Tooltip("Czy symulacja ma być ograniczona granicami mapy.")]
-    public bool enableBoundary = true;
-    [Tooltip("Rozmiar (promień) dostępnego dla zwierząt obszaru.")]
-    [Range(50f, 1000f)] public float boundaryRadius = 500f;
+    [Header("▶ ZACHOWANIE DRAPIEŻNIKÓW (PREDATOR)")]
+    [Tooltip("Maksymalna prędkość drapieżnika w pościgu.")]
+    [Range(1f, 15f)] public float predatorMaxSpeed = 6.0f;
+    [Tooltip("Maksymalna siła sterująca drapieżnika (jak gwałtownie może skręcać).")]
+    [Range(1f, 15f)] public float predatorMaxForce = 10.0f;
+    [Tooltip("Z jakiej odległości drapieżnik wykrywa ofiarę.")]
+    [Range(10f, 100f)] public float preyDetectionRadius = 70.0f;
+    [Tooltip("Jak agresywnie drapieżnik skupia się na celu.")]
+    [Range(0f, 5f)] public float chaseWeight = 3.0f;
+    [Tooltip("Jak szybko narasta głód drapieżnika.")]
+    [Range(0.001f, 0.1f)] public float predatorHungerRate = 0.01f; // hunger rate
+    [Tooltip("Jakie obrażenia drapieżnik zadaje przy jednym ataku.")]
+    [Range(0.1f, 0.5f)] public float damagePerHit = 0.2f;
+    [Tooltip("Czas w sekundach, jaki drapieżnik musi odczekać między atakami.")]
+    [Range(0f, 5f)] public float hitCooldown = 3.0f; // cooldown attack
+
+    [Header("▶ ZACHOWANIE STADNE (BOIDS)")]
+    [Tooltip("W jakiej odległości zwierzęta zaczynają się odpychać (dotyczy ofiar i drapieżników).")]
+    [Range(5f , 10f)] public float seperationRadius = 7.0f;
+    [Tooltip("Jak silnie zwierzęta odpychają się od siebie.")]
+    [Range(0f, 10f)] public float seperationWeight = 7.0f;
+    [Tooltip("Z jakiej odległości zwierzęta dopasowują swój kierunek i prędkość.")]
+    [Range(10f, 30f)] public float alignmentRadius = 20.0f;
+    [Tooltip("Jak silnie zwierzęta dopasowują swój kierunek.")]
+    [Range(0f, 5f)] public float alignmentWeight = 2.0f;
+    [Tooltip("Z jakiej odległości zwierzęta próbują trzymać się środka stada.")]
+    [Range(10f, 30f)] public float cohesionRadius = 20.0f;
+    [Tooltip("Jak silnie zwierzęta przyciągają się do środka stada.")]
+    [Range(0f, 5f)] public float cohesionWeight = 1.5f;
+
 
     // =====================================================================
     // ||                  USTAWIENIA ZAAWANSOWANE                        ||
@@ -58,24 +77,15 @@ public class SimulationManager : MonoBehaviour
     [Header("Ogólne Ustawienia Agentów")]
     public float updateInterval = 0.1f;
     public float rotationSmoothSpeed = 5.0f;
-
-    [Header("Zaawansowane Ustawienia Ofiar (Prey)")]
-    public float seperationRadius = 2.0f;
-    public float alignmentRadius = 3.0f;
-    public float cohesionRadius = 4.0f;
-    public float maxForce = 0.5f;
-    public float seperationWeight = 6.0f;
-    public float alignmentWeight = 4.0f;
     public float randomMovementWeight = 0.5f;
-    public float fatigueRecoveryRate = 0.02f;
-    public float fatigueIncreaseRate = 0.05f;
+
+    [Header("Zaawansowane Ustawienia Wędrowania Ofiar")]
     public float wanderRadius = 1.5f;
     public float wanderDistance = 2.0f;
     public float wanderJitter = 80.0f;
     public float wanderWeight = 1.0f;
 
-    [Header("Zaawansowane Ustawienia Drapieżników (Predator)")]
-    public float predatorMaxForce = 10.0f;
+    [Header("Zaawansowane Ustawienia Drapieżników")]
     public float predatorFriction = 0.9f;
 
     [Header("Zaawansowane Ustawienia Stada Drapieżników")]
@@ -85,13 +95,11 @@ public class SimulationManager : MonoBehaviour
     public float predatorSeperationWeight = 2.5f;
     public float predatorAlignmentWeight = 1.0f;
     public float predatorCohesionWeight = 1.0f;
+    public float hitDistance = 2.0f;
 
     [Header("Zaawansowane Ustawienia Polowania")]
     public float eatDistance = 1.0f;
-    public float hitDistance = 3.0f;
     public float eatingCooldown = 2.0f;
-    public float hitCooldown = 3.0f;
-    public float damagePerHit = 0.2f;
 
     [Header("Zaawansowane Ustawienia Omijania Przeszkód")]
     public float obstacleAvoidanceDistance = 10.0f;
@@ -105,13 +113,19 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] private float groupSpawnRadius = 5.0f;
     [SerializeField] private float spawnHeight = 10.0f;
 
-    //[Header("Zaawansowane Ustawienia Granic Świata")]
+    [Header("Zaawansowane Ustawienia Granic Świata")]
+    public bool enableBoundary = true;
     public enum BoundaryShape { Circle, Box }
     public BoundaryShape shape = BoundaryShape.Circle;
+    public float boundaryRadius = 100f;
     public Vector2 boundarySize = new Vector2(200, 200);
     public float boundaryMargin = 15f;
     public float boundaryAvoidanceWeight = 4.0f;
     public float boundaryForceMultiplier = 50.0f;
+
+    [Header("Zaawansowane Ustawienia Przetrwania")]
+    [Tooltip("Szansa na pojawienie się nowego potomstwa ofiar (na sekundę na parę).")]
+    [Range(0f, 0.01f)] public float preyReproductionChance = 0.001f;
 
     // --- Zmienne systemowe (nie do edycji w Inspectorze) ---
     [HideInInspector] public List<GameObject> preys = new List<GameObject>();

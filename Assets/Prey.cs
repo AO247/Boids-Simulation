@@ -155,7 +155,7 @@ public class Prey : MonoBehaviour
         if (isFleeing)
         {
             // Zamiast: fatigue += simManager.fatigueIncreaseRate * Time.deltaTime;
-            fatigue += simManager.preyFatigueRate * Time.deltaTime;
+            fatigue += simManager.fatigueIncreaseRate * Time.deltaTime;
         }
         else
         {
@@ -206,7 +206,7 @@ public class Prey : MonoBehaviour
             cohesionForce = cohesionForce - transform.position;
         }
 
-        return (separationForce * simManager.seperationWeight) +
+        return (separationForce * simManager.seperationWeight * 10) +
                (alignmentForce * simManager.alignmentWeight) +
                (cohesionForce * simManager.cohesionWeight);
     }

@@ -280,7 +280,7 @@ public class Predator : MonoBehaviour
             cohesionForce = (cohesionForce / alignmentAndCohesionCount) - transform.position;
         }
 
-        return (separationForce * simManager.predatorSeperationWeight) +
+        return (separationForce * simManager.predatorSeperationWeight * 10) +
                (alignmentForce * simManager.predatorAlignmentWeight) +
                (cohesionForce * simManager.predatorCohesionWeight);
     }
